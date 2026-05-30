@@ -4,7 +4,27 @@ import { questions } from './questions.js'
 import './styles.css'
 
 function shuffle(items) {
-  return [...items].sort(() => Math.random() - 0.5)
+  const copy = [...items]
+  for (let i = copy.length - 1; i > 0; i -= 1) {
+    const j = Math.floor(Math.random() * (i + 1))
+    ;[copy[i], copy[j]] = [copy[j], copy[i]]
+  }
+  return copy
+}
+
+function shuffleQuestionOptions(question) {
+  const optionsWithCorrectFlag = question.options.map((option, index) => ({
+    option,
+    isCorrect: index === question.answer
+  }))
+
+  const shuffledOptions = shuffle(optionsWithCorrectFlag)
+
+  return {
+    ...question,
+    options: shuffledOptions.map(item => item.option),
+    answer: shuffledOptions.findIndex(item => item.isCorrect)
+  }
 }
 
 function App() {
@@ -25,7 +45,7 @@ function App() {
   const score = answers.filter(a => a.correct).length
 
   function startQuiz() {
-    setQuizQuestions(shuffle(filteredQuestions))
+    setQuizQuestions(shuffle(filteredQuestions).map(shuffleQuestionOptions))
     setIndex(0)
     setSelected(null)
     setAnswers([])
@@ -137,7 +157,7 @@ function App() {
               if (i === current.answer) className += ' correct'
               else if (i === selected) className += ' wrong'
             } else if (selected === i) className += ' selected'
-            return <button key={option} className={className} onClick={() => chooseAnswer(i)}>{option}</button>
+            return <button key={`${option}-${i}`} className={className} onClick={() => chooseAnswer(i)}>{option}</button>
           })}
         </div>
         {selected !== null && mode === 'practice' && (
